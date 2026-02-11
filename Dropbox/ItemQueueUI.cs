@@ -14,6 +14,14 @@ public unsafe static class ItemQueueUI
     static string Filter = "";
     public static void Draw()
     {
+        if(P.StopRequests.Count > 0)
+        {
+            ImGuiEx.TextWrapped(EColor.RedBright, $"Plugin is paused by {P.StopRequests.Print()}");
+            if(ImGuiEx.IconButtonWithText(FontAwesomeIcon.Ban, "Resume"))
+            {
+                P.StopRequests.Clear();
+            }
+        }
         if (P.TaskManager.IsBusy)
         {
             if (ImGui.Button("Stop"))
@@ -132,7 +140,7 @@ public unsafe static class ItemQueueUI
             {
                 if(ThreadLoadImageHandler.TryGetIconTextureWrap(ExcelItemHelper.Get(x.Descriptor.Id)?.Icon ?? 0, false, out var tex)) 
                 {
-                    ImGui.Image(tex.ImGuiHandle, new Vector2(24));
+                    ImGui.Image(tex.Handle, new Vector2(24));
                 }
             }));
             Entries.Add(new("Quantity", () =>
@@ -229,7 +237,7 @@ public unsafe static class ItemQueueUI
                 for (int i = 0; i < cont->Size; i++)
                 {
                     var slot = *cont->GetInventorySlot(i);
-                    if (slot.ItemId == item.Key.Id && slot.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality) == item.Key.HQ && item.Value.Value > 0 && slot.SpiritbondOrCollectability == 0)
+                    if (slot.ItemId == item.Key.Id && slot.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality) == item.Key.HQ && item.Value.Value > 0 && slot.SpiritbondOrCollectability == 0 && slot.GlamourId == 0)
                     {
                         var quantity = item.Value.Value < slot.Quantity ? item.Value.Value : (int)slot.Quantity;
                         PluginLog.Information($"Enqueueing slot {i} of {type} ({ExcelItemHelper.GetName(slot.ItemId, true)}) with quantity {quantity}");
@@ -318,7 +326,7 @@ public unsafe static class ItemQueueUI
             for (var i = 0u; i < cont->Size; i++)
             {
                 var item = *cont->GetInventorySlot((int)i);
-                if(item.ItemId != 0 && item.SpiritbondOrCollectability == 0 && P.TradeableItems.Contains(item.ItemId))
+                if(item.ItemId != 0 && item.SpiritbondOrCollectability == 0 && P.TradeableItems.Contains(item.ItemId) && item.GlamourId == 0)
                 {
                     if(ret.TryGetFirst(x=> x.Descriptor.Id == item.ItemId && x.Descriptor.HQ == item.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality), out var itemRecord))
                     {
